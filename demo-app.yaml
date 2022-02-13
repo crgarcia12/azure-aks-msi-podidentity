@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: my-app
+  name: demo
+  labels:
+    aadpodidbinding: crgar-aks-msi-aks-pod-identity
+spec:
+  containers:
+  - name: demo-app
+    image: mcr.microsoft.com/oss/azure/aad-pod-identity/demo:v1.6.3
+    args:
+      - --subscriptionid=930c11b0-5e6d-458f-b9e3-f3dda0734110
+      - --clientid=fa42274d-db2f-4304-a61b-6e531a56bcd6
+      - --resourcegroup=crgar-aks-msi-rg
+    env:
+      - name: MY_POD_NAME
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.name
+      - name: MY_POD_NAMESPACE
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.namespace
+      - name: MY_POD_IP
+        valueFrom:
+          fieldRef:
+            fieldPath: status.podIP
+  nodeSelector:
+    kubernetes.io/os: linux
