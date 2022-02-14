@@ -1,13 +1,27 @@
-az feature register --name EnablePodIdentityPreview --namespace Microsoft.ContainerService
-
+############################################
+############################################
+#
+# Testing AAD Pod Identity on Azure AKS 
+#
+############################################
+############################################
 
 $resourceGroup = "crgar-aks-msi-rg"
 $identityName = "crgar-aks-msi-aks-pod-identity"
 $aksName = "crgar-aks-msi-aks"
 
+#  1. Enable the AAD Pod identity preview feature and add the AddOn to your cluster
+az feature register --name EnablePodIdentityPreview --namespace Microsoft.ContainerService
+az aks update -g $resourceGroup -n $aksName --enable-pod-identity --enable-pod-identity-with-kubenet
+
+#  2. Create an MSI on Azure if you don't have one
 az identity create --resource-group $resourceGroup --name $identityName
+
+#  3. Extract the IdentityID and the AAD ClientID
 $IdentityClientId="$(az identity show -g $resourceGroup -n $identityName --query clientId -otsv)"
 $IdentityResourceId="$(az identity show -g ${resourceGroup} -n ${identityName} --query id -otsv)"
+
+#  5. Grant access to your identity to the DB
 
 # DROP USER IF EXISTS "crgar-aks-msi-aks-pod-identity"
 # GO
@@ -18,7 +32,10 @@ $IdentityResourceId="$(az identity show -g ${resourceGroup} -n ${identityName} -
 # GRANT EXECUTE TO "crgar-aks-msi-aks-pod-identity"
 # GO
 
-az aks update -g $resourceGroup -n $aksName --enable-pod-identity --enable-pod-identity-with-kubenet
+###############################
+#   Testing the identity
+###############################
+
 
 kubectl apply -f my-app-namespace.yaml
 
